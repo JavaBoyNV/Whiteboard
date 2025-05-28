@@ -6,8 +6,20 @@ const colorPicker = document.getElementById('colorPicker');
 const brushSize = document.getElementById('brushSize');
 const clearBtn = document.getElementById('clearBtn');
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// Set a large logical canvas size (for drawing area)
+const CANVAS_WIDTH = 1200;
+const CANVAS_HEIGHT = 2000;
+const dpr = window.devicePixelRatio || 1;
+
+canvas.width = CANVAS_WIDTH * dpr;
+canvas.height = CANVAS_HEIGHT * dpr;
+
+// Scale context for high DPI screens
+ctx.scale(dpr, dpr);
+
+// Set CSS canvas size to match logical size (in CSS pixels)
+canvas.style.width = `${CANVAS_WIDTH}px`;
+canvas.style.height = `${CANVAS_HEIGHT}px`;
 
 let drawing = false;
 let lastX = 0;
@@ -18,7 +30,7 @@ if (role === 'main') {
     document.getElementById('toolbar').style.display = 'block';
 }
 
-function drawLine(x0, y0, x1, y1, color='black', size=2, emit=true) {
+function drawLine(x0, y0, x1, y1, color = 'black', size = 2, emit = true) {
     ctx.strokeStyle = color;
     ctx.lineWidth = size;
     ctx.lineCap = 'round';
@@ -35,22 +47,22 @@ function drawLine(x0, y0, x1, y1, color='black', size=2, emit=true) {
 if (role === 'main') {
 
     canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // Prevent scrolling
+        e.preventDefault();
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
-        lastX = touch.clientX - rect.left;
-        lastY = touch.clientY - rect.top;
+        lastX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+        lastY = (touch.clientY - rect.top) * (canvas.height / rect.height);
         drawing = true;
     });
 
     canvas.addEventListener('touchmove', (e) => {
-        e.preventDefault(); // Prevent scrolling
+        e.preventDefault();
         if (!drawing) return;
 
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
+        const x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+        const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
 
         const color = colorPicker.value;
         const size = brushSize.value;
@@ -61,14 +73,15 @@ if (role === 'main') {
     });
 
     canvas.addEventListener('touchend', (e) => {
-        e.preventDefault(); // Prevent scrolling
+        e.preventDefault();
         drawing = false;
     });
 
     canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        lastX = (e.clientX - rect.left) * (canvas.width / rect.width);
+        lastY = (e.clientY - rect.top) * (canvas.height / rect.height);
         drawing = true;
-        lastX = e.clientX;
-        lastY = e.clientY;
     });
 
     canvas.addEventListener('mouseup', () => {
@@ -77,8 +90,9 @@ if (role === 'main') {
 
     canvas.addEventListener('mousemove', (e) => {
         if (!drawing) return;
-        const x = e.clientX;
-        const y = e.clientY;
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+        const y = (e.clientY - rect.top) * (canvas.height / rect.height);
         const color = colorPicker.value;
         const size = brushSize.value;
         drawLine(lastX, lastY, x, y, color, size);
@@ -107,22 +121,22 @@ socket.on('clear', () => {
     clearCanvas();
 });
 
+// Save full canvas as PDF
 document.getElementById('savePDF').addEventListener('click', () => {
-    const canvas = document.getElementById('whiteboard');
     const imgData = canvas.toDataURL('image/png');
 
-    // Use jsPDF from the global window object
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({
-        orientation: 'landscape',
+        orientation: 'portrait',
         unit: 'px',
-        format: [canvas.width, canvas.height]
+        format: [CANVAS_WIDTH, CANVAS_HEIGHT]
     });
 
-    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+    pdf.addImage(imgData, 'PNG', 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     pdf.save('whiteboard.pdf');
 });
 
-document.body.addEventListener('touchmove', function(e) {
+// Prevent page scrolling when drawing on main
+document.body.addEventListener('touchmove', function (e) {
     if (role === 'main') e.preventDefault();
 }, { passive: false });
