@@ -6,20 +6,19 @@ const colorPicker = document.getElementById('colorPicker');
 const brushSize = document.getElementById('brushSize');
 const clearBtn = document.getElementById('clearBtn');
 
-// Set a large logical canvas size (for drawing area)
+// Set logical canvas size (CSS dimensions)
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 2000;
-const dpr = window.devicePixelRatio || 1;
+canvas.style.width = `${CANVAS_WIDTH}px`;
+canvas.style.height = `${CANVAS_HEIGHT}px`;
 
+// Set actual canvas pixel size (high DPI support)
+const dpr = window.devicePixelRatio || 1;
 canvas.width = CANVAS_WIDTH * dpr;
 canvas.height = CANVAS_HEIGHT * dpr;
 
-// Scale context for high DPI screens
+// Scale context for clarity
 ctx.scale(dpr, dpr);
-
-// Set CSS canvas size to match logical size (in CSS pixels)
-canvas.style.width = `${CANVAS_WIDTH}px`;
-canvas.style.height = `${CANVAS_HEIGHT}px`;
 
 let drawing = false;
 let lastX = 0;
@@ -30,13 +29,32 @@ if (role === 'main') {
     document.getElementById('toolbar').style.display = 'block';
 }
 
+function getScaledCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    if (e.touches) {
+        const touch = e.touches[0];
+        return {
+            x: (touch.clientX - rect.left) * scaleX,
+            y: (touch.clientY - rect.top) * scaleY
+        };
+    } else {
+        return {
+            x: (e.clientX - rect.left) * scaleX,
+            y: (e.clientY - rect.top) * scaleY
+        };
+    }
+}
+
 function drawLine(x0, y0, x1, y1, color = 'black', size = 2, emit = true) {
     ctx.strokeStyle = color;
     ctx.lineWidth = size;
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(x0, y0);
-    ctx.lineTo(x1, y1);
+    ctx.moveTo(x0 / dpr, y0 / dpr);
+    ctx.lineTo(x1 / dpr, y1 / dpr);
     ctx.stroke();
     ctx.closePath();
 
@@ -45,55 +63,40 @@ function drawLine(x0, y0, x1, y1, color = 'black', size = 2, emit = true) {
 }
 
 if (role === 'main') {
-
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
-        const touch = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        lastX = (touch.clientX - rect.left);
-        lastY = (touch.clientY - rect.top);
+        const { x, y } = getScaledCoords(e);
+        lastX = x;
+        lastY = y;
         drawing = true;
     });
 
     canvas.addEventListener('touchmove', (e) => {
         e.preventDefault();
         if (!drawing) return;
-
-        const touch = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        const x = (touch.clientX - rect.left);
-        const y = (touch.clientY - rect.top);
-
+        const { x, y } = getScaledCoords(e);
         const color = colorPicker.value;
         const size = brushSize.value;
         drawLine(lastX, lastY, x, y, color, size);
-
         lastX = x;
         lastY = y;
     });
-
 
     canvas.addEventListener('touchend', (e) => {
         e.preventDefault();
         drawing = false;
     });
 
-    canvas.addEventListener('mouseup', () => {
-        drawing = false;
-    });
-
     canvas.addEventListener('mousedown', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        lastX = (e.clientX - rect.left);
-        lastY = (e.clientY - rect.top);
+        const { x, y } = getScaledCoords(e);
+        lastX = x;
+        lastY = y;
         drawing = true;
     });
 
     canvas.addEventListener('mousemove', (e) => {
         if (!drawing) return;
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left);
-        const y = (e.clientY - rect.top);
+        const { x, y } = getScaledCoords(e);
         const color = colorPicker.value;
         const size = brushSize.value;
         drawLine(lastX, lastY, x, y, color, size);
@@ -101,6 +104,9 @@ if (role === 'main') {
         lastY = y;
     });
 
+    canvas.addEventListener('mouseup', () => {
+        drawing = false;
+    });
 
     // Handle clear button
     clearBtn.addEventListener('click', () => {
