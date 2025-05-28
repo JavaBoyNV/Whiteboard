@@ -50,8 +50,8 @@ if (role === 'main') {
         e.preventDefault();
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
-        lastX = (touch.clientX - rect.left) * (canvas.width / rect.width);
-        lastY = (touch.clientY - rect.top) * (canvas.height / rect.height);
+        lastX = (touch.clientX - rect.left);
+        lastY = (touch.clientY - rect.top);
         drawing = true;
     });
 
@@ -61,8 +61,8 @@ if (role === 'main') {
 
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
-        const x = (touch.clientX - rect.left) * (canvas.width / rect.width);
-        const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+        const x = (touch.clientX - rect.left);
+        const y = (touch.clientY - rect.top);
 
         const color = colorPicker.value;
         const size = brushSize.value;
@@ -71,34 +71,36 @@ if (role === 'main') {
         lastX = x;
         lastY = y;
     });
+
 
     canvas.addEventListener('touchend', (e) => {
         e.preventDefault();
         drawing = false;
     });
 
-    canvas.addEventListener('mousedown', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        lastX = (e.clientX - rect.left) * (canvas.width / rect.width);
-        lastY = (e.clientY - rect.top) * (canvas.height / rect.height);
-        drawing = true;
-    });
-
     canvas.addEventListener('mouseup', () => {
         drawing = false;
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        lastX = (e.clientX - rect.left);
+        lastY = (e.clientY - rect.top);
+        drawing = true;
     });
 
     canvas.addEventListener('mousemove', (e) => {
         if (!drawing) return;
         const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-        const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+        const x = (e.clientX - rect.left);
+        const y = (e.clientY - rect.top);
         const color = colorPicker.value;
         const size = brushSize.value;
         drawLine(lastX, lastY, x, y, color, size);
         lastX = x;
         lastY = y;
     });
+
 
     // Handle clear button
     clearBtn.addEventListener('click', () => {
