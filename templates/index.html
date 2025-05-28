@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Live Whiteboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div id="toolbar" style="display: none;">
+        <label for="colorPicker">Color:</label>
+        <input type="color" id="colorPicker" value="#000000">
+
+        <label for="brushSize" style="margin-left: 5px;">Brush Size:</label>
+        <input type="range" id="brushSize" min="1" max="20" value="2"><br>
+
+        <button id="clearBtn" style="margin-top: 5px;">Clear Board</button>
+        <button id="savePDF" style="margin-left: 15px; margin-bottom: 5px;">Save as PDF</button><br>
+        Developed by: Nikhil Kumar Vashist
+    </div>
+    <canvas id="whiteboard"></canvas>
+    <script>
+        const role = "{{ role }}";
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
