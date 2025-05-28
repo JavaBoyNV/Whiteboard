@@ -34,6 +34,37 @@ function drawLine(x0, y0, x1, y1, color='black', size=2, emit=true) {
 
 if (role === 'main') {
 
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Prevent scrolling
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        lastX = touch.clientX - rect.left;
+        lastY = touch.clientY - rect.top;
+        drawing = true;
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault(); // Prevent scrolling
+        if (!drawing) return;
+
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        const color = colorPicker.value;
+        const size = brushSize.value;
+        drawLine(lastX, lastY, x, y, color, size);
+
+        lastX = x;
+        lastY = y;
+    });
+
+    canvas.addEventListener('touchend', (e) => {
+        e.preventDefault(); // Prevent scrolling
+        drawing = false;
+    });
+
     canvas.addEventListener('mousedown', (e) => {
         drawing = true;
         lastX = e.clientX;
@@ -91,3 +122,7 @@ document.getElementById('savePDF').addEventListener('click', () => {
     pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
     pdf.save('whiteboard.pdf');
 });
+
+document.body.addEventListener('touchmove', function(e) {
+    if (role === 'main') e.preventDefault();
+}, { passive: false });
